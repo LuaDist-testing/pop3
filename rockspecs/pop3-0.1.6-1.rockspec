@@ -1,20 +1,12 @@
--- This file was automatically generated for the LuaDist project.
-
 package = "pop3"
-version = "0.1.5-1"
--- LuaDist source
+version = "0.1.6-1"
 source = {
-  tag = "0.1.5-1",
-  url = "git://github.com/LuaDist-testing/pop3.git"
+  url = "https://github.com/moteus/lua-pop3/archive/v0.1.6.zip",
+  dir = "lua-pop3-0.1.6",
 }
--- Original source
--- source = {
---   url = "https://github.com/moteus/lua-pop3/archive/v0.1.5.zip",
---   dir = "lua-pop3-0.1.5",
--- }
 
 description = {
-  summary = "Simple POP3 client library for Lua 5.1/5.2",
+  summary = "Simple POP3 client library for Lua 5.1/5.2/5.3",
   homepage = "https://github.com/moteus/lua-pop3",
   license  = "MIT/X11",
 }
@@ -24,6 +16,8 @@ dependencies = {
   "luasocket >= 2.0",
   -- "lua-iconv >= 7.0",  -- optional
   -- "lua-crypto >= 0.2", -- optional
+  -- "openssl",           -- optional
+  -- "lmd5",              -- optional
   -- "lpeg >= 0.9",       -- optional
   -- "alien >= 0.7.0",    -- optional on windows
 }
@@ -42,6 +36,7 @@ build = {
 
   modules = {
     ["pop3" ]        = "lua/pop3.lua",
+    ["pop3.module"]  = "lua/pop3/module.lua",
     ["pop3.charset"] = "lua/pop3/charset.lua",
     ["pop3.message"] = "lua/pop3/message.lua",
   }

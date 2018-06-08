@@ -2,20 +2,25 @@ pcall(require, "luacov")
 
 local HAS_RUNNER = not not lunit
 
+POP3_SELF_TEST = true
+
+require "utils"
+
+local lunit   = require "lunit"
+local pop3    = require "pop3"
+local charset = require "pop3.charset"
+
 print("------------------------------------")
-print("Lua version: " .. (_G.jit and _G.jit.version or _G._VERSION))
+print("Module    name: " .. pop3._NAME)
+print("Module version: " .. pop3._VERSION)
+print("Lua    version: " .. (_G.jit and _G.jit.version or _G._VERSION))
 print("------------------------------------")
 print("")
-
-POP3_SELF_TEST = true
-local lunit = require "lunit"
-local pop3  = require "pop3"
-local charset = require "pop3.charset"
 
 local IS_LUA52 = (_VERSION >= 'Lua 5.2')
 
 local skip      = lunit.skip or function (msg) return function() lunit.fail("#SKIP: " .. msg) end end
-local TEST_CASE = function (name)
+local TEST_CASE = lunit.TEST_CASE or function (name)
   if not IS_LUA52 then
     module(name, package.seeall, lunit.testcase)
     setfenv(2, _M)
@@ -24,9 +29,10 @@ local TEST_CASE = function (name)
   end
 end
 
-require "utils"
+local ENABLED = true
 
-local _ENV = TEST_CASE"pop3 internal test"
+-------------------------------------------------------------------------------
+local _ENV = TEST_CASE"internal test" if ENABLED then
 
 function test_pop3_charset()
   if charset.pass_thrue_only() then
@@ -51,7 +57,11 @@ function test_pop3_message()
   test_pop3_messege_get_address_list()
 end
 
-local _ENV = TEST_CASE"pop3"
+end
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+local _ENV = TEST_CASE"api" if ENABLED then
 
 function test_interface()
   local mbox = assert(pop3.new())
@@ -82,9 +92,16 @@ function test_interface()
 
   assert_function(mbox.message)
   assert_function(mbox.messages)
+
+  assert_match("^%d+%.%d+%.%d+%-?", pop3._VERSION)
+  assert_equal("pop3",              pop3._NAME   )
 end
 
-local _ENV = TEST_CASE"Test message convert"
+end
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+local _ENV = TEST_CASE"mime message decode" if ENABLED then
 
 function test_interface()
   local file_dir = path_join('tests','test1')
@@ -249,7 +266,46 @@ function test_message_2()
   assert_equal( msg.headers:header('content-type'), msg:header('content-type'), 'get header via mime')
 end
 
-local _ENV = TEST_CASE"Test pop3 protocol"
+function test_message_3()
+  local file_dir = path_join('tests','test3')
+  local msg = load_msg_file(path_join(file_dir, 'test.eml'))
+  -- mixed
+  -- - plain text
+  -- - message rfc822
+  --   - multipart/alternative
+  --     - plain text
+  --     - plain html
+
+  assert_true ( msg.content.is_multi)
+  assert_equal( msg.content:parts(), 2)
+
+  msg:set_cp("windows-1251")
+  msg:set_eol("\r\n")
+
+  local text = assert_table(msg:text())
+  assert_equal( #text, 1 )
+  assert_str_file( text[1].text, path_join(file_dir, 'text1.txt') , 'plain text/plain #1')
+
+  local attachments = assert_table(msg:attachments())
+  assert_equal( #attachments, 1 )
+
+  assert_equal('message/rfc822', attachments[1].type)
+  msg = assert(attachments[1].message)
+
+  msg:set_cp("windows-1251")
+  msg:set_eol("\r\n")
+
+  text = assert_table(msg:text())
+  assert_equal( #text, 2 )
+  assert_str_file( text[1].text, path_join(file_dir, 'text2.txt') , 'plain text/plain #2')
+  assert_str_file( text[2].text, path_join(file_dir, 'html.html') , 'html text/html #1')
+end
+
+end
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+local _ENV = TEST_CASE"protocol" if ENABLED then
 
 function test_pop3_cmd()
   local test_session = {
@@ -379,7 +435,9 @@ function test_pop3_capa()
     }
   }),'capa list')
   assert_true(mbox:close())
+end
 
+function test_pop3_capa_unsupport()
   local test_session = {
     o = {"+OK POP Ya! v1.0.0na@2 IbeYKj57Sa61"};
     i = {
@@ -394,5 +452,8 @@ function test_pop3_capa()
   assert_nil( ok )
   assert_equal(' Invalid command in current state.', err)
 end
+
+end
+-------------------------------------------------------------------------------
 
 if not HAS_RUNNER then lunit.run() end
