@@ -1,3 +1,10 @@
+local HAS_RUNNER = not not lunit
+
+print("------------------------------------")
+print("Lua version: " .. (_G.jit and _G.jit.version or _G._VERSION))
+print("------------------------------------")
+print("")
+
 POP3_SELF_TEST = true
 local lunit = require "lunit"
 local pop3  = require "pop3"
@@ -5,7 +12,7 @@ local charset = require "pop3.charset"
 
 local IS_LUA52 = (_VERSION >= 'Lua 5.2')
 
-local skip      = function (msg) return function() lunit.fail("#SKIP: " .. msg) end end
+local skip      = lunit.skip or function (msg) return function() lunit.fail("#SKIP: " .. msg) end end
 local TEST_CASE = function (name)
   if not IS_LUA52 then
     module(name, package.seeall, lunit.testcase)
@@ -21,7 +28,7 @@ local _ENV = TEST_CASE"pop3 internal test"
 
 function test_pop3_charset()
   if charset.pass_thrue_only() then
-    return fail("you must install iconv library to support charset encoding")
+    return skip("you must install iconv library to support charset encoding")
   end
 
   local str_1251 = "привет"
@@ -36,7 +43,7 @@ end
 function test_pop3_message()
   local msg = pop3.message{}
   if not msg.from_list then
-    return fail("you must install lpeg.re library to support parsing from/to/reply headers")
+    return skip("you must install lpeg.re library to support parsing from/to/reply headers")
   end
 
   test_pop3_messege_get_address_list()
@@ -176,7 +183,7 @@ function test_message_1_charset_encode()
   local msg = load_msg_file(path_join(file_dir, 'test.eml'))
 
   if charset.pass_thrue_only() then
-    return fail("you must install iconv library to support charset encoding")
+    return skip("you must install iconv library to support charset encoding")
   end
 
   -- change output code page
@@ -189,7 +196,7 @@ function test_message_1_parse_lists()
   local msg = load_msg_file(path_join(file_dir, 'test.eml'))
 
   if not msg.from_list then
-    return fail("you must install lpeg.re library to support parsing from/to/reply headers")
+    return skip("you must install lpeg.re library to support parsing from/to/reply headers")
   end
 
   assert_true(is_equal(msg:from_list(), 
@@ -291,7 +298,7 @@ function test_pop3_auth_apop()
 
   local mbox = pop3.new(new_test_server(test_session))
   if not mbox.auth_apop then
-    return fail("you must install one of this libraries to support auth_apop: LuaCrypto, lmd5 or md5")
+    return skip("you must install one of this libraries to support auth_apop: LuaCrypto, lmd5 or md5")
   end
 
   assert_true ( mbox:open())
@@ -311,7 +318,7 @@ function test_pop3_auth_cmd5()
 
   local mbox = pop3.new(new_test_server(test_session))
   if not mbox.auth_cmd5 then
-    return fail(
+    return skip(
       "you must install this libraries to support auth_cmd5: \n"
       .. "    - socket.mime or base64 to support base64 encoding\n"
       .. "    - LuaCrypto, lmd5 or md5 to support md5 encoding\n"
@@ -378,4 +385,4 @@ function test_pop3_capa()
   assert_equal(' Invalid command in current state.', err)
 end
 
-lunit.run()
+if not HAS_RUNNER then lunit.run() end
