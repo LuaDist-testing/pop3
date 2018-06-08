@@ -11,10 +11,10 @@ local DECODERS = {
   ['base64'] = function(nl) 
     local t = {
       -- socket_mime.normalize(), -- decode_content alwas set CRLF for this
-      function(msg) return mime.unb64('', msg) end,
+      function(msg) return socket_mime.unb64('', msg) end,
     }
     if nl and nl ~= CRLF then
-      table.insert(t, function(msg) return mime.eol(0, msg, nl) end)
+      table.insert(t, function(msg) return socket_mime.eol(0, msg, nl) end)
     end
     return socket_ltn12.filter.chain((unpack or table.unpack)(t))
   end;
@@ -22,10 +22,10 @@ local DECODERS = {
   ['quoted-printable'] = function(nl) 
     local t = {
       -- socket_mime.normalize(), -- decode_content alwas set CRLF for this
-      function(msg) return mime.unqp('', msg) end,
+      function(msg) return socket_mime.unqp('', msg) end,
     }
     if nl and nl ~= CRLF then
-      table.insert(t, function(msg) return mime.eol(0, msg, nl) end)
+      table.insert(t, function(msg) return socket_mime.eol(0, msg, nl) end)
     end
     return socket_ltn12.filter.chain((unpack or table.unpack)(t))
   end;
@@ -65,6 +65,21 @@ local function slice(t, s, e)
     u[i - s  + 1] = t[i]
   end
   return u
+end
+
+local function split(str, sep, plain)
+  local b, res = 1, {}
+  while b <= #str do
+    local e, e2 = string.find(str, sep, b, plain)
+    if e then
+      table.insert(res, (string.sub(str, b, e-1)))
+      b = e2 + 1
+    else
+      table.insert(res, (string.sub(str, b)))
+      break
+    end
+  end
+  return res
 end
 
 local decode_str = function (target_charset, base_charset, str)
@@ -1002,8 +1017,9 @@ function M.cp_converter() return CP end
 
 function M.eol() return DEFAULT_NL end
 
-setmetatable(M, {__call = function(self, ...)
-  return mime(...)
+setmetatable(M, {__call = function(self, msg, ...)
+  if type(msg) == "string" then msg = split(msg, CRLF, true) end
+  return mime(msg, ...)
 end})
 
 return M
