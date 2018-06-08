@@ -2,6 +2,7 @@ lua-pop3
 ============
 ##Build status##
 [![Build Status](https://travis-ci.org/moteus/lua-pop3.png?branch=master)](https://travis-ci.org/moteus/lua-pop3)
+[![Coverage Status](https://coveralls.io/repos/moteus/lua-pop3/badge.png)](https://coveralls.io/r/moteus/lua-pop3)
 
 POP3 client library for Lua 5.1 / 5.2
 
@@ -66,3 +67,6 @@ for k, msg in mbox:messages() do
   end
 end
 ```
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/moteus/lua-pop3/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+

@@ -1,16 +1,16 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "pop3"
-version = "0.1.4-1"
+version = "0.1.5-1"
 -- LuaDist source
 source = {
-  tag = "0.1.4-1",
+  tag = "0.1.5-1",
   url = "git://github.com/LuaDist-testing/pop3.git"
 }
 -- Original source
 -- source = {
---   url = "https://github.com/moteus/lua-pop3/archive/v0.1.4.zip",
---   dir = "lua-pop3-0.1.4",
+--   url = "https://github.com/moteus/lua-pop3/archive/v0.1.5.zip",
+--   dir = "lua-pop3-0.1.5",
 -- }
 
 description = {
